@@ -43,13 +43,13 @@ namespace UnityEngine.Purchasing
         public OnPurchaseFailedEvent onPurchaseFailed;
 
         [Tooltip("[Optional] Displays the localized title from the app store")]
-        public Text titleText;
+        public TMPro.TextMeshProUGUI titleText;
 
         [Tooltip("[Optional] Displays the localized description from the app store")]
-        public Text descriptionText;
+        public TMPro.TextMeshProUGUI descriptionText;
 
         [Tooltip("[Optional] Displays the localized price from the app store")]
-        public Text priceText;
+        public TMPro.TextMeshProUGUI priceText;
 
         void Start()
         {
