@@ -156,6 +156,7 @@ namespace UnityEngine.Purchasing
             foreach (var button in activeButtons)
             {
                 button.UpdateText();
+                SubscriptionHandler.instance.GetInfo(GetProduct(button.productId));
             }
         }
 

@@ -7,10 +7,13 @@ using DG.Tweening;
 
 public class SubscriptionHandler : MonoBehaviour
 {
+    public static SubscriptionHandler instance { get; set; }
+
     #region Variables
     const string _monthlySubID = "m_subscription";
     const string _yearlySubID = "y_subscription";
 
+    [SerializeField] TextMeshProUGUI _txtSubInfo = null;
     [SerializeField] TextMeshProUGUI _txtMessage = null;
     [SerializeField] GameObject _pnSub = null;
     [SerializeField] GameObject _pnContent = null;
@@ -18,11 +21,15 @@ public class SubscriptionHandler : MonoBehaviour
     [Header("IAP Buttons")]
     [SerializeField] IAPButton _btnMonthlySub = null;
     [SerializeField] IAPButton _btnYearlySub = null;
+
+    List<SubscriptionInfo> _lstSubscriptionInfo = new List<SubscriptionInfo>();
     #endregion
 
     #region Functions
     private void Awake()
     {
+        instance = this;
+
         _btnMonthlySub.onPurchaseComplete.AddListener((v) => { PurchaseSuccess(v); });
         _btnYearlySub.onPurchaseComplete.AddListener((v) => { PurchaseSuccess(v); });
 
@@ -44,15 +51,14 @@ public class SubscriptionHandler : MonoBehaviour
                 break;
         }
 
+        if (product.definition.type == ProductType.Subscription)
+            GetInfo(product);
+
+#if UNITY_EDITOR
+        ActivateContent();
+#endif
+
         _txtMessage.color = Color.green;
-
-
-        // Hide popup.
-        _pnSub.GetComponent<RectTransform>().DOAnchorPosX(-1000f, .75f)
-            .SetEase(Ease.Linear)
-            .OnComplete(() => { _pnSub.SetActive(false); });
-
-        _pnContent.SetActive(true);
     }
 
     public void PurchaseFailed(Product product, PurchaseFailureReason purchaseFailureReason)
@@ -75,5 +81,48 @@ public class SubscriptionHandler : MonoBehaviour
         _pnSub.SetActive(true);
         _pnContent.SetActive(false);
     }
-    #endregion
+
+    public void GetInfo(Product p)
+    {
+#if !UNITY_EDITOR
+        SubscriptionManager subscriptionManager = new SubscriptionManager(p, null);
+
+        if( subscriptionManager.getSubscriptionInfo() != null )
+        {
+            _lstSubscriptionInfo.Insert(0, subscriptionManager.getSubscriptionInfo());
+
+            _txtSubInfo.text += "<color=#ff0>Purchase Date:</color> " + _lstSubscriptionInfo[0].getPurchaseDate() + "\n"
+                + "<color=#ff0>Auto Renewing:</color> " + _lstSubscriptionInfo[0].isAutoRenewing() + "\n"
+                + "<color=#ff0>Free Trial:</color> " + _lstSubscriptionInfo[0].isFreeTrial() + "\n"
+                + "<color=#ff0>Is Subscriped:</color> " + _lstSubscriptionInfo[0].isSubscribed() + "\n"
+                + "-----------------------\n";
+        }
+
+        // We check if our subscription still has remaining time, this makes sure even if the user
+        // cancels but still has time left, that they get the content.
+        if( _lstSubscriptionInfo.Count > 0 && _lstSubscriptionInfo[0].getRemainingTime().TotalSeconds > 0 )
+        {
+            if( !_pnContent.activeInHierarchy )
+            {
+                ActivateContent();
+            }
+        }
+#else
+        _txtSubInfo.text = "Inside unity editor - can't get subscription info.";
+#endif
+    }
+
+    void ActivateContent()
+    {
+        if (_pnContent.activeInHierarchy)
+            return;
+
+        // Hide popup.
+        _pnSub.GetComponent<RectTransform>().DOAnchorPosX(-1000f, .75f)
+            .SetEase(Ease.Linear)
+            .OnComplete(() => { _pnSub.SetActive(false); });
+
+        _pnContent.SetActive(true);
+    }
+#endregion
 }

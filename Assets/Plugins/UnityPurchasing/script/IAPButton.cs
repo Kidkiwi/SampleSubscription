@@ -178,7 +178,12 @@ namespace UnityEngine.Purchasing
             {
                 if (titleText != null)
                 {
-                    titleText.text = product.metadata.localizedTitle;
+                    string title = product.metadata.localizedTitle;
+
+                    if (title.Contains("("))
+                        titleText.text = title.Substring(0, title.IndexOf("("));
+                    else
+                        titleText.text = title;
                 }
 
                 if (descriptionText != null)
@@ -188,7 +193,7 @@ namespace UnityEngine.Purchasing
 
                 if (priceText != null)
                 {
-                    priceText.text = "$" + product.metadata.localizedPriceString;
+                    priceText.text = product.metadata.localizedPriceString;
                 }
             }
         }
