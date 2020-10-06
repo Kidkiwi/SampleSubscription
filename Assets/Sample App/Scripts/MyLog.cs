@@ -7,7 +7,7 @@ public class MyLog : MonoBehaviour
     string myLog;
     List<string> myLogQueue = new List<string>();
 
-    void OnEnable()
+    void Awake()
     {
         Application.logMessageReceived += HandleLog;
     }
